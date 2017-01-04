@@ -40,13 +40,15 @@ MS_flat_data <- fread("M:/Technology/DATA/TV_sets_model/Integration/extract.csv"
 
 #~~~HH Start~~~#
 HH <- left_join(HH,country_list)
-HH <- HH[,-match("Country", names(HH))]
+HH <- column.rm(HH, "Country")
 names(HH)[match("Old.country", names(HH))] <- "Country"
 HH <- as.dt(HH)
 
 HH <- HH[order(Measure, Region, Country)]
 HH_flat <- HH %>%
   gather(Year, Households,`2007`:`2020`)
+HH_flat$Year <- f2n(HH_flat$Year)
+HH_flat <- HH_flat[!(HH_flat$Region=="North America" & HH_flat$Country=="Others"),]
 HH_flat <- as.dt(HH_flat)
 HH_flat <- HH_flat[, list(Households = sum(Households)),
                        by = c("Measure", "Region", "Country", "Year")]
@@ -66,7 +68,7 @@ flat.data.cleaning <- function(flat_data){
   flat_data <- flat_data[,c("V1","Sub.region"):=NULL] # remove row name
   flat_data <- as.df(flat_data)
   flat_data <- left_join(flat_data,country_list)
-  flat_data <- flat_data[,-match("Country", names(flat_data))]
+  flat_data <- column.rm(flat_data, "Country")
   names(flat_data)[match("Old.country", names(flat_data))] <- "Country"
   flat_data <- as.dt(flat_data)
   flat_data <- flat_data[, list(TV.households = sum(`TV households (000s)`), Installed.base = sum(`Installed base (000s)`), Domestic.consumption = sum(`Domestic consumption (000s)`),
@@ -104,13 +106,13 @@ flat_data <- as.dt(flat_data)
 MS_flat_data <- MS_flat_data[,c("V1"):=NULL] # remove row name
 MS_flat_data <- as.df(MS_flat_data)
 MS_flat_data <- left_join(MS_flat_data,country_list)
-MS_flat_data <- MS_flat_data[,-match("Country", names(MS_flat_data))]
+MS_flat_data <- column.rm(MS_flat_data, "Country")
 names(MS_flat_data)[match("Old.country", names(MS_flat_data))] <- "Country"
 MS_flat_data <- as.dt(MS_flat_data)
 MS_flat_data <- MS_flat_data[, list(Installed.base = sum(`Installed base (000s)`), 
                               Shipments = sum(`Shipments (000s)`)),
                        by = c("TV.Type", "Region", "Country", "Vendor","variable")]
-
+names(MS_flat_data)[match("variable", names(MS_flat_data))] <- "Year"
 MS_flat_data$variable <- as.numeric(as.character(MS_flat_data$variable))
 #~~~MS Flat Data End~~~#
 #~~~Data Cleaning End~~~#
@@ -148,10 +150,6 @@ for (i in 1: length(names(out))){
 # x <- Reduce(function(...) dplyr::bind_rows(...
 #                                   ), out) # for TRAX if decide to combine the two scripts tgt
 
-#~~~(1) HH_Pen_data Start~~~#
-
-#~~~(1) HH_Pen_data End~~~#
-
 
 
 TV.Sets.Production <- function(Measure_Match, df_list) { # Measure match is the name of the df in the list not exactly the colname
@@ -169,33 +167,51 @@ TV.Sets.Production <- function(Measure_Match, df_list) { # Measure match is the 
 Display_data <- TV.Sets.Production("Display Tech",out)
 #~~~(2) Display_data End~~~#
 
+
+
 #~~~(3) Resolution_format_data Start~~~#
 Resolution_format_data <- TV.Sets.Production("Resolution format",out)
 #~~~(3) Resolution_format_data End~~~#
+
+
+
+#~~~(1) HH_Pen_data Start~~~#
+temp_df <- Resolution_format_data[Resolution_format_data$`Resolution format`=="UHD",1:5]
+names(temp_df)[length(names(temp_df))] <- "UHD TV households (000s)"
+temp_df <- column.rm(temp_df, "Resolution format")
+HH_pen_data <- left_join(HH_out,temp_df)
+#~~~(1) HH_Pen_data End~~~#
+
+
 
 #~~~(4) Smart_data Start~~~#Smart capability
 Smart_data <- TV.Sets.Production("Smart",out)
 #~~~(4) Smart_data End~~~#
 
+
+
 #~~~(5) Connected_rate_data Start~~~#
 Connected_rate_data <- TV.Sets.Production("Connectable",out)
 #~~~(3) Resolution_format_data End~~~#
+
+
 
 #~~~(6) 3D_data Start~~~#
 `3D_data` <- TV.Sets.Production("3D",out)
 #~~~(6) 3D_data End~~~#
 
+
+
 #~~~(7) Backlight_data Start~~~#
 Backlight_data <- TV.Sets.Production("Backlight",out)
 #~~~(7) Backlight_data End~~~#
 
-#~~~(8) Frame_Rate_data Start~~~#
-Frame_Rate_data <- TV.Sets.Production("Frame Rate",out)
-#~~~(8) Frame_Rate_data End~~~#
+
 
 #~~~backlight_xtra Start~~~#
 backlight_xtra <- TV.Sets.Production("LED Type",out)
 #~~~backlight_xtra End~~~#
+
 
 
 #~~~Backlight_data Processing Start~~~#
@@ -208,21 +224,24 @@ Backlight_data <- rbind.data.frame(Backlight_data, backlight_xtra)
 
 
 
+#~~~(8) Frame_Rate_data Start~~~#
+Frame_Rate_data <- TV.Sets.Production("Frame Rate",out)
+#~~~(8) Frame_Rate_data End~~~#
 
 
-#~~~(3) Resolution_format_data Start~~~#
-Smart_data <- TV.Sets.Production("",out)
-#~~~(3) Resolution_format_data End~~~#
 
-#~~~(3) Resolution_format_data Start~~~#
-Smart_data <- TV.Sets.Production("",out)
-#~~~(3) Resolution_format_data End~~~#
+#~~~(9) TV_MS_data Start~~~#
+TV_MS_data <- MS_flat_data[MS_flat_data$TV.Type=="All",]
+#~~~(9) TV_MS_data End~~~#
 
-#~~~(3) Resolution_format_data Start~~~#
-Smart_data <- TV.Sets.Production("",out)
-#~~~(3) Resolution_format_data End~~~#
+#~~~(10) Smart_TV_MS_data Start~~~#
+Smart_TV_MS_data <- MS_flat_data[!MS_flat_data$TV.Type=="All",]
+#~~~(10) Smart_TV_MS_data End~~~#
 
-#~~~(3) Resolution_format_data Start~~~#
-Smart_data <- TV.Sets.Production("",out)
-#~~~(3) Resolution_format_data End~~~#
-#~~~~~~Excel Deliverable End~~~~~~#
+
+
+
+#~~~Write Data Start~~~#
+# could do a rodbc but that would mean more changes to the deliverable file
+save.xlsx("test_data.xlsx", HH_pen_data, Display_data, Resolution_format_data, Smart_data, Connected_rate_data, `3D_data`, Backlight_data, Frame_Rate_data, TV_MS_data, Smart_TV_MS_data)
+#~~~Write Data End~~~#
