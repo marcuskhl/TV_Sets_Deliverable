@@ -60,6 +60,8 @@ names(HH_2)[match("Households", names(HH_2))] <- names(out)[[2]]
 HH_1 <- HH_1[,-1]
 HH_2 <- HH_2[,-1]
 HH_out <- left_join(HH_1,HH_2) # this is not final, still need to attach UHD HH
+HH_out$Total_HH <- HH_out$Total_HH * 1000
+HH_out$TV_HH <- HH_out$TV_HH * 1000
 #~~~HH End~~~#
 
 
@@ -153,7 +155,7 @@ for (i in 1: length(names(out))){
 
 
 TV.Sets.Production <- function(Measure_Match, df_list) { # Measure match is the name of the df in the list not exactly the colname
-  df_list <- out
+  #df_list <- out
   temp_df <- df_list[[match(Measure_Match, names(df_list))]]
   temp_df <- temp_df[,-3]
   temp_df <- temp_df[,c(grep("Submeasure", names(temp_df)), grep("Submeasure", names(temp_df), invert = T))]
@@ -186,18 +188,23 @@ HH_pen_data <- left_join(HH_out,temp_df)
 
 #~~~(4) Smart_data Start~~~#Smart capability
 Smart_data <- TV.Sets.Production("Smart",out)
+Smart_data <- column.rm(Smart_data, "Revenues")
 #~~~(4) Smart_data End~~~#
 
 
 
 #~~~(5) Connected_rate_data Start~~~#
 Connected_rate_data <- TV.Sets.Production("Connectable",out)
+Connected_rate_data <- Connected_rate_data[,c(1:4,grep("Installed.base",names(Connected_rate_data)))]
+Connected_rate_data$Connectable[Connected_rate_data$Connectable == "Connected"] <- "Smart - connected"
+Connected_rate_data$Connectable[Connected_rate_data$Connectable == "Unconnected"] <- "Smart - unconnected"
 #~~~(3) Resolution_format_data End~~~#
 
 
 
 #~~~(6) 3D_data Start~~~#
 `3D_data` <- TV.Sets.Production("3D",out)
+`3D_data` <- column.rm(`3D_data`, "Revenues")
 #~~~(6) 3D_data End~~~#
 
 
@@ -220,29 +227,35 @@ backlight_xtra$`LED Type`[backlight_xtra$`LED Type`=="Direct"] <- "D-LED"
 backlight_xtra$`LED Type`[backlight_xtra$`LED Type`=="Edge"] <- "E-LED"
 names(backlight_xtra) <- names(Backlight_data)
 Backlight_data <- rbind.data.frame(Backlight_data, backlight_xtra)
+Backlight_data <- column.rm(Backlight_data, "Revenues")
 #~~~Backlight_data Processing End~~~#
 
 
 
 #~~~(8) Frame_Rate_data Start~~~#
 Frame_Rate_data <- TV.Sets.Production("Frame Rate",out)
+Frame_Rate_data <- column.rm(Frame_Rate_data, "Revenues")
 #~~~(8) Frame_Rate_data End~~~#
 
 
 
 #~~~(9) TV_MS_data Start~~~#
 TV_MS_data <- MS_flat_data[MS_flat_data$TV.Type=="All",]
+TV_MS_data <- column.rm(TV_MS_data, c("TV.Type","Installed.base"))
 #~~~(9) TV_MS_data End~~~#
 
 #~~~(10) Smart_TV_MS_data Start~~~#
 Smart_TV_MS_data <- MS_flat_data[!MS_flat_data$TV.Type=="All",]
+Smart_TV_MS_data <- as.df(Smart_TV_MS_data)
+Smart_TV_MS_data <- Smart_TV_MS_data[,c(grep("Installed",names(Smart_TV_MS_data), invert = T),grep("Installed",names(Smart_TV_MS_data)))]
+Smart_TV_MS_data <- as.dt(Smart_TV_MS_data)
 #~~~(10) Smart_TV_MS_data End~~~#
 
 
 
 
 #~~~Write Data Start~~~#
-# could do a rodbc but that would mean more changes to the deliverable file
-save.xlsx("M:/Technology/DATA/TV_sets_model/Integration/IHS-2016-Q4- TV Sets Domestic Consumption by Feature - Country Level .xlsx",
+# could do a rodbc but that would mean more invasive changes to the deliverable file
+save.xlsx("M:/Technology/DATA/TV_sets_model/Integration/TV Sets Domestic Consumption by Feature - Country Level DATA.xlsx",
           HH_pen_data, Display_data, Resolution_format_data, Smart_data, Connected_rate_data, `3D_data`, Backlight_data, Frame_Rate_data, TV_MS_data, Smart_TV_MS_data)
 #~~~Write Data End~~~#
