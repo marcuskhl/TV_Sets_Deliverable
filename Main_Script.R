@@ -112,8 +112,8 @@ MS_flat_data <- as.dt(MS_flat_data)
 MS_flat_data <- MS_flat_data[, list(Installed.base = sum(`Installed base (000s)`), 
                               Shipments = sum(`Shipments (000s)`)),
                        by = c("TV.Type", "Region", "Country", "Vendor","variable")]
-names(MS_flat_data)[match("variable", names(MS_flat_data))] <- "Year"
-MS_flat_data$variable <- as.numeric(as.character(MS_flat_data$variable))
+MS_flat_data <- df.name.change(MS_flat_data, "variable", "Year", F)
+MS_flat_data$Year <- f2n(MS_flat_data$Year)
 #~~~MS Flat Data End~~~#
 #~~~Data Cleaning End~~~#
 
@@ -243,5 +243,6 @@ Smart_TV_MS_data <- MS_flat_data[!MS_flat_data$TV.Type=="All",]
 
 #~~~Write Data Start~~~#
 # could do a rodbc but that would mean more changes to the deliverable file
-save.xlsx("test_data.xlsx", HH_pen_data, Display_data, Resolution_format_data, Smart_data, Connected_rate_data, `3D_data`, Backlight_data, Frame_Rate_data, TV_MS_data, Smart_TV_MS_data)
+save.xlsx("M:/Technology/DATA/TV_sets_model/Integration/IHS-2016-Q4- TV Sets Domestic Consumption by Feature - Country Level .xlsx",
+          HH_pen_data, Display_data, Resolution_format_data, Smart_data, Connected_rate_data, `3D_data`, Backlight_data, Frame_Rate_data, TV_MS_data, Smart_TV_MS_data)
 #~~~Write Data End~~~#
