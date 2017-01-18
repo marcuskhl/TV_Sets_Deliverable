@@ -155,7 +155,7 @@ for (i in 1: length(names(out))){
 
 
 TV.Sets.Production <- function(Measure_Match, df_list) { # Measure match is the name of the df in the list not exactly the colname
-  #df_list <- out
+  df_list <- out
   temp_df <- df_list[[match(Measure_Match, names(df_list))]]
   temp_df <- temp_df[,-3]
   temp_df <- temp_df[,c(grep("Submeasure", names(temp_df)), grep("Submeasure", names(temp_df), invert = T))]
