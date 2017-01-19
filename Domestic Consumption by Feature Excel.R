@@ -1,5 +1,5 @@
 if(is.na(match(c("devtools"),installed.packages()[,"Package"]))) install.packages(new.packages) else library(devtools)
-suppressMessages(devtools::install_github("marcuskhl/BasicSettings"));suppressMessages(library(BasicSettings))
+suppressMessages(devtools::install_github("marcuskhl/BasicSettings"));library(BasicSettings)
 
 source("C:/Users/WYK51348/Downloads/Documents/R_Codes/TV_Sets_Deliverable/Rmagic/Pivot_Output.R")
 
@@ -47,7 +47,7 @@ HH <- as.dt(HH)
 
 HH <- HH[order(Measure, Region, Country)]
 HH_flat <- HH %>%
-  gather(Year, Households,`2007`:`2020`)
+  gather(Year, Households,`2007`:`2020`) # <------------------------------Change
 HH_flat$Year <- f2n(HH_flat$Year)
 HH_flat <- HH_flat[!(HH_flat$Region=="North America" & HH_flat$Country=="Others"),]
 HH_flat <- as.dt(HH_flat)
