@@ -1,7 +1,7 @@
 if(is.na(match(c("devtools"),installed.packages()[,"Package"]))) install.packages(new.packages) else library(devtools)
 suppressMessages(devtools::install_github("marcuskhl/BasicSettings"));suppressMessages(library(BasicSettings))
 
-
+options(digits = 3)
 yq <- as.yearqtr(Sys.Date(), format = "%Y-%m-%d") 
 current_year <- substr(yq, 1,4)
 
@@ -29,12 +29,12 @@ HH <- read.xlsx("M:/Technology/DATA/TV_sets_model/Integration/TRAX/TV Set Domest
                           rows = NULL, cols = NULL, check.names = FALSE, namedRegion = NULL)
 
 # output of Pivot_output.R
-flat_data <- fread("M:/Technology/DATA/TV_sets_model/Integration/output_extract.csv", sep = ",")
+flat_data <- fread("M:/Technology/DATA/TV_sets_model/Integration/output_extract.csv")
 flat_data <- as.df(flat_data)
 
 #~~~~~~Cleaning Start~~~~~~#
-flat_data <- flat_data[,-1] # remove row name
-flat_data <- flat_data[,-2] # remove sub region
+flat_data <- flat_data[,-2] # remove row name
+#flat_data <- flat_data[,-2] # remove sub region
 
 flat_data <- left_join(flat_data,country_list)
 
@@ -42,7 +42,8 @@ flat_data <- column.rm(flat_data, "Country")
 flat_data <- df.name.change(flat_data, "Old.country", "Country", F)
 
 
-flat_data <- df.name.change(flat_data, c("households", "Installed", "Domestic", "Shipments", "Revenues"), 
+
+flat_data <- df.name.change(flat_data, c("households", "Installed", "Domestic", "Shipments", "Revenues"),
                             c("TV.households", "Installed.base", "Domestic.consumption", "Shipments", "Revenues"), T)
 # names(flat_data)[grep("households", names(flat_data))] <- "TV.households"
 # names(flat_data)[grep("Installed", names(flat_data))] <- "Installed.base"
@@ -50,12 +51,12 @@ flat_data <- df.name.change(flat_data, c("households", "Installed", "Domestic", 
 # names(flat_data)[grep("Shipments", names(flat_data))] <- "Shipments"
 # names(flat_data)[grep("Revenues", names(flat_data))] <- "Revenues"
 
-
-selected_cols <- c("Region", "Country", "Submeasure")
-flat_data[,match(selected_cols,names(flat_data))] <- lapply(flat_data[,match(selected_cols,names(flat_data))], as.character)
-
-selected_cols <- c("variable", "TV.households", "Installed.base", "Domestic.consumption", "Shipments", "Revenues")
-flat_data[,match(selected_cols,names(flat_data))] <- lapply(flat_data[,match(selected_cols,names(flat_data))], f2n)
+# flat_data <- as.df(flat_data)
+# selected_cols <- c("Region", "Country", "Submeasure")
+# flat_data[,match(selected_cols,names(flat_data))] <- lapply(flat_data[,match(selected_cols,names(flat_data))], as.character)
+# 
+# selected_cols <- c("variable", "TV.households", "Installed.base", "Domestic.consumption", "Shipments", "Revenues")
+# flat_data[,match(selected_cols,names(flat_data))] <- lapply(flat_data[,match(selected_cols,names(flat_data))], f2n)
 
 
 
@@ -82,6 +83,7 @@ names(flat_data)[match("variable", names(flat_data))] <- "Year"
 #~~~~~~Finding Net Addition & Replacement~~~~~~#
 # Replacements & Net Add are calculated fields
 # have to be calculated unless I want to read from the deliverable file
+flat_data <- as.df(flat_data)
 flat_data$Measure <- as.character(flat_data$Measure)
 
 flat_data$Net_Addition <- 0
@@ -183,3 +185,4 @@ TRAX <- y[,c(grep("Measure",names(y)),grep("Measure",names(y), invert = T))] # s
 #~~~~~~Write Workbook Start~~~~~~#
 save.xlsx("M:/Technology/DATA/TV_sets_model/Integration/TRAX/Upload This File.xlsx", TRAX)
 #~~~~~~Write Workbook End~~~~~~#
+options(digits = 15)
